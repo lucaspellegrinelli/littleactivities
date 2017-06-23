@@ -1,14 +1,15 @@
-#
-include < stdio.h > #include < math.h > #include < string.h >
+#include<stdio.h>
+#include<math.h>
+#include<string.h>
 
-  typedef unsigned char bool;#
-define true 1# define false 0
+typedef unsigned char bool;
+#define true 1
+#define false 0
 
 typedef struct Variable {
   char name;
   int index;
-}
-Variable;
+}Variable;
 
 bool contains(Variable * s, int varCount, char c) {
   for (int i = 0; i < varCount; i++)
