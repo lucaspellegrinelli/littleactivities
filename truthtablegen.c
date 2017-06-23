@@ -124,13 +124,8 @@ int main() {
   for (int i = 0; i < exprSize; i++) {
     if (expr[i] >= 'a' && expr[i] <= 'z' && expr[i] != 'v') {
       if (!contains(variables, varCount, expr[i])) {
-        Variable
-        var = {
-          expr[i],
-          varCount
-        };
-        variables[varCount] =
-          var;
+        Variable var = {expr[i], varCount};
+        variables[varCount] = var;
         varCount++;
       }
     }
