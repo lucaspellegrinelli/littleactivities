@@ -3,8 +3,10 @@
 #include<string.h>
 
 /*
-	Author: Lucas Pellegrinelli
-	Contact: lucas.pellegrinelli@hotmail.com
+  Author: Lucas Pellegrinelli
+  Contact: lucas.pellegrinelli@hotmail.com
+  
+  The code simply creates a Truth Table from a boolean function
 */
 
 /*
