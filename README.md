@@ -6,3 +6,6 @@ If, or some obscure reason, you want some information about anything, contact me
 If you're gonna use something, please credit me.
 
 Finally, don't expect good programming practices, documentation or code explanation from the code itself.
+
+## Summary
+**truthtable.c**: A Truth Table Generator in C
