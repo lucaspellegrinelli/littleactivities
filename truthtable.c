@@ -3,6 +3,11 @@
 #include<string.h>
 
 /*
+	Author: Lucas Pellegrinelli
+	Contact: lucas.pellegrinelli@hotmail.com
+*/
+
+/*
   NEGATION: ~p
   CONJUNCTION: p^q
   DISJUNCTION: pvq
@@ -16,11 +21,11 @@ const char IMPLICATION_SYMB = '>';
 const char EQUIVALENCE_SYMB = '=';
 
 char isSymbol(char c){
-	return c == NEGATION_SYMB || c == CONJUNCTION_SYMB || c == DISJUNCTION_SYMB || c == IMPLICATION_SYMB || c == EQUIVALENCE_SYMB;
+  return c == NEGATION_SYMB || c == CONJUNCTION_SYMB || c == DISJUNCTION_SYMB || c == IMPLICATION_SYMB || c == EQUIVALENCE_SYMB;
 }
 
 char contains(char* s, char c){
-	int length = sizeof(s)/sizeof(s[0]);
+  int length = sizeof(s)/sizeof(s[0]);
   for(int i = 0; i < length; i++)
     if(s[i] == c)
       return 1;
@@ -28,7 +33,7 @@ char contains(char* s, char c){
 }
  
 int getVariableIndex(char* s, char c){
-	int length = sizeof(s)/sizeof(s[0]);
+  int length = sizeof(s)/sizeof(s[0]);
   for(int i = 0; i < length; i++)
     if(s[i] == c)
       return i;
@@ -44,7 +49,7 @@ char getVariableValueFromName(char c, char* varsName, char* values){
 }
  
 void removeFromArray(char* array, int index){
-	int length = sizeof(array)/sizeof(array[0]);
+  int length = sizeof(array)/sizeof(array[0]);
   for(int i = index; i < length - 1; i++){
     array[i] = array[i + 1];
   }
