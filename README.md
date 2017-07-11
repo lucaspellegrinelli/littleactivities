@@ -8,4 +8,4 @@ If you're gonna use something, please credit me.
 Finally, don't expect good programming practices, documentation or code explanation from the code itself.
 
 ## Summary
-**truthtable.c**: A Truth Table Generator in C
+**truthtable.c**: A Truth Table Generator in C. Creates a truth table from a boolean expression
