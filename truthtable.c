@@ -121,17 +121,8 @@ void resolveExpression(char expr[], char* varsName, char* values){
   
   resolveParenthesis(expr, varsName, values);
 }
- 
-int main() {
-  /*
-    NEGATION: ~p
-    CONJUNCTION: p^q
-    DISJUNCTION: pvq
-    IMPLICATION: p>q
-    EQUIVALENCE: p=q
-  */
-  char expr[] = "~(p>q)^r";
- 
+
+void printTruthTable(char expr[]){
   int exprSize = strlen(expr);
   
   char variableNames[8];
@@ -172,4 +163,17 @@ int main() {
        
     count++;
   }
+}
+ 
+int main() {
+  /*
+    NEGATION: ~p
+    CONJUNCTION: p^q
+    DISJUNCTION: pvq
+    IMPLICATION: p>q
+    EQUIVALENCE: p=q
+  */
+  char expr[] = "(q^~p)>r";
+  
+  printTruthTable(expr);
 }
