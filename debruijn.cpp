@@ -18,8 +18,6 @@ std::vector<int> de_bruijin(int k, int n){
     if(l == 0) break;
     a[l - 1]++;
   }
-
-  for(int i = 0; i < n - 1; i++) sequence.push_back(0);
   
   return sequence;
 }
