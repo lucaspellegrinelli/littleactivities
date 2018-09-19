@@ -15,11 +15,11 @@ std::vector<int> de_bruijin(int k, int n){
     
     for(l = n; l > 0 && a[l - 1] >= k - 1; l--);
 
-    if(l == 0)
-      return sequence;
-    
+    if(l == 0) break;
     a[l - 1]++;
   }
+  
+  return sequence;
 }
 
 int main() {
