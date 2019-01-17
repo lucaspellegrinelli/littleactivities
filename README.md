@@ -6,4 +6,4 @@ Some programming activities I recieve from friends, found on internet or somethi
 
 **debruijn.cpp**: A De Bruijn sequence generator in C++ (Duval's Algorithm).
 
-**pidigits.py**? A PI digit calculator using collisions between two blocks and a wall (3blu1brown video https://youtu.be/HEfHFsfGXjs)
+**pidigits.py**? A PI digit calculator using collisions between blocks (3blu1brown video https://youtu.be/HEfHFsfGXjs)
