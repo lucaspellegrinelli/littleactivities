@@ -25,14 +25,14 @@ long long n_choose_k(long long n, long long k){
 // Pre computes the matrix with nCr where n is the matrix row and r
 // is the matrix column
 vector<vector<int>> precompute_nCk(int n_options, int bet_size){
-  vector<vector<int>> precomp_mat(n_options);
-  for(int i = 0; i < n_options; i++){
+  vector<vector<int>> precomp_mat;
+  for(int i = 0; i <= n_options; i++){
     vector<int> precomp_option;
     for(int j = 0; j <= bet_size; j++){
       precomp_option.push_back(n_choose_k(i, j));
     }
 
-    precomp_mat[i] = precomp_option;
+    precomp_mat.push_back(precomp_option);
   }
 
   return precomp_mat;
@@ -71,11 +71,11 @@ set<short> decode_bet(long long bet_id, int bet_size, vector<vector<int>> nCk_pr
 
 // Takes all the bets and returns a bet that no one betted on
 set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
-  int bet_options_count = n_choose_k(n_options, bet_size);
+  vector<vector<int>> nCk_precomp = precompute_nCk(n_options, bet_size);
+
+  int bet_options_count = nCk_precomp[n_options][bet_size];
   vector<int> bet_options(bet_options_count);
   fill(bet_options.begin(), bet_options.end(), 0);
-
-  vector<vector<int>> nCk_precomp = precompute_nCk(n_options, bet_size);
 
   for(set<short> bet : all_bets){
     long long encoded_bet = encode_bet(bet, nCk_precomp);
