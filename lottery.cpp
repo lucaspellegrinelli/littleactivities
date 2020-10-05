@@ -22,12 +22,28 @@ long long n_choose_k(long long n, long long k){
   return result;
 }
 
+// Pre computes the matrix with nCr where n is the matrix row and r
+// is the matrix column
+vector<vector<int>> precompute_nCk(int n_options, int bet_size){
+  vector<vector<int>> precomp_mat(n_options);
+  for(int i = 0; i < n_options; i++){
+    vector<int> precomp_option;
+    for(int j = 0; j <= bet_size; j++){
+      precomp_option.push_back(n_choose_k(i, j));
+    }
+
+    precomp_mat[i] = precomp_option;
+  }
+
+  return precomp_mat;
+}
+
 // Takes a bet and encodes it into an integer
-long long encode_bet(set<short> bet){
+long long encode_bet(set<short> bet, vector<vector<int>> nCk_precomp){
   int result = 0;
   int k = bet.size();
   for(auto it = bet.rbegin(); it != bet.rend(); it++){
-    result += n_choose_k(*it, k--);
+    result += nCk_precomp[*it][k--];
   }
 
   return result;
@@ -59,8 +75,10 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   vector<int> bet_options(bet_options_count);
   fill(bet_options.begin(), bet_options.end(), 0);
 
+  vector<vector<int>> nCk_precomp = precompute_nCk(n_options, bet_size);
+
   for(set<short> bet : all_bets){
-    long long encoded_bet = encode_bet(bet);
+    long long encoded_bet = encode_bet(bet, nCk_precomp);
     bet_options[encoded_bet]++;
   }
 
@@ -98,18 +116,23 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
 
   ---- TIME COMPLEXITY ANALYSIS ----
   The time complexity of this algorithm is
-  O(n * k^2 + (m! / (k! * (m - k)!)))
+  O(m * k^2 + n * k + (m! / (k! * (m - k)!)))
 
   Where
     'n' = Number of bets
     'k' = Size of each bet
     'm' = Options available to choose from in each bet
   
-  O(n * k^2) is because when calling 'solve', we loop through
+  O(m * k^2) comes from the matrix precomputing where we loop
+  through each possible bet number and for each of them (O(m)),
+  through each position in the bet it can be in (O(k)) and for
+  each of these combinations, we calculate nCr with it in O(k).
+  Nesting all this together we end up with O(m * k^2)
+
+  O(n * k) is because when calling 'solve', we loop through
   each bet (O(n)), for each bet we need to encode it by looping
-  through each number in the bet (O(k)) and for each number
-  we calculate nCr with it in O(k). Nesting all this together we
-  end up with O(n * k^2)
+  through each number in the bet (O(k)) and each encoding is
+  now O(1) with the pre computing of the nCr matrix.
 
   O(m! / (k! * (m - k)!)) is because after encoding each bet,
   we need to loop over all possible combinations of bets, which
@@ -123,10 +146,10 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
     'm' = 60        (options available to choose from in each bet)
   
   We have that
-  10000000 * 6^2 + (60! / (6! * (60 - 6)!)) = 410063860
+  60 * 6^2 + 10000000 * 6 + (60! / (6! * (60 - 6)!)) = 110066020
 
   Assuming 10^8 operations takes approximatelly 1 second, this much
-  operations should take approx 410063860 / 10^8 = 4.1 seconds without
+  operations should take approx 110066020 / 10^8 = 1.1 seconds without
   taking the reading of the file into account.
 */
 int main(int argc, char *argv[]){
