@@ -50,15 +50,15 @@ long long encode_bet(set<short> bet, vector<vector<int>> nCk_precomp){
 }
 
 // Takes an integer and decodes it into a bet
-set<short> decode_bet(long long bet_id, int bet_size){
+set<short> decode_bet(long long bet_id, int bet_size, vector<vector<int>> nCk_precomp){
   int choice = bet_size - 1;
-  while (n_choose_k(choice, bet_size) < bet_id) {
+  while (nCk_precomp[choice][bet_size] < bet_id) {
     choice++;
   }
 
   set<short> result;
   for (; choice >= 0; choice--) {
-    long long c_choose_bs = n_choose_k(choice, bet_size);
+    long long c_choose_bs = nCk_precomp[choice][bet_size];
     if (c_choose_bs <= bet_id) {
       bet_id -= c_choose_bs;
       bet_size--;
@@ -84,11 +84,11 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
 
   for(int i = 0; i < bet_options_count; i++){
     if(bet_options[i] == 0){
-      return decode_bet(i, bet_size);
+      return decode_bet(i, bet_size, nCk_precomp);
     }
   }
 
-  return decode_bet(0, bet_size);
+  return decode_bet(0, bet_size, nCk_precomp);
 }
 
 /*
