@@ -144,7 +144,8 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   We have that
   60 * 6^2 + 10000000 * 6 + (60! / (6! * (60 - 6)!)) = 110066020
 
-  This took approx 160 seconds in my machine.
+  This took approx 3 seconds in my machine with the -O3 compilation
+  tag.
 */
 int main(int argc, char *argv[]){
   int n_options = 60;
