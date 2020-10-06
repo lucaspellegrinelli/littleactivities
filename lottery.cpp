@@ -3,11 +3,8 @@
 #include <stdlib.h>
 #include <vector>
 #include <set>
-#include <chrono> 
-
-#include <bits/stdc++.h>
-#define magic ios_base::sync_with_stdio(false);
-#define thingy cin.tie(NULL); cout.tie(NULL);
+#include <stdio.h>
+#include <chrono>
 
 using namespace std;
 using namespace chrono; 
@@ -44,17 +41,6 @@ vector<vector<long long>> precompute_nCk(int n_options, int bet_size){
   return precomp_mat;
 }
 
-// Takes a bet and encodes it into an integer
-long long encode_bet(set<short> bet, vector<vector<long long>> nCk_precomp){
-  int result = 0;
-  int k = bet.size();
-  for(auto it = bet.rbegin(); it != bet.rend(); it++){
-    result += nCk_precomp[*it][k--];
-  }
-
-  return result;
-}
-
 // Takes an integer and decodes it into a bet
 set<short> decode_bet(long long bet_id, int bet_size, vector<vector<long long>> nCk_precomp){
   int choice = bet_size - 1;
@@ -80,13 +66,21 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, bet_size);
 
   int bet_options_count = nCk_precomp[n_options][bet_size];
-  vector<int> bet_options(bet_options_count);
-  fill(bet_options.begin(), bet_options.end(), 0);
+  vector<int> bet_options(bet_options_count, 0);
 
+  auto start = high_resolution_clock::now(); 
   for(set<short> bet : all_bets){
-    long long encoded_bet = encode_bet(bet, nCk_precomp);
+    int encoded_bet = 0;
+    int k = bet.size();
+    for(set<short>::reverse_iterator it = bet.rbegin(); it != bet.rend(); it++){
+      encoded_bet += nCk_precomp[*it][k--];
+    }
+
     bet_options[encoded_bet]++;
   }
+  auto stop = high_resolution_clock::now(); 
+  auto duration = duration_cast<microseconds>(stop - start); 
+  cout << "Time taken to encode: " << (duration.count() / 1000000.0) << endl; 
 
   for(int i = 0; i < bet_options_count; i++){
     if(bet_options[i] == 0){
@@ -157,38 +151,38 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   This took approx 160 seconds in my machine.
 */
 int main(int argc, char *argv[]){
-  magic thingy;
-
   int n_options = 60;
   int bet_size = 6;
 
   if(argc > 1) n_options = strtol(argv[1], &argv[1], 10);
   if(argc > 2) bet_size = strtol(argv[2], &argv[2], 10);
 
-  short n;
-  set<short> current_bet;
-  vector<set<short>> all_bets;
-  while(cin >> n){
-    current_bet.insert(n);
+  auto start = high_resolution_clock::now(); 
 
-    if(current_bet.size() == bet_size){
-      set<short> complete_bet = current_bet;
-      all_bets.push_back(complete_bet);
-      current_bet.clear();
+  vector<set<short>> all_bets;
+  for(int i = 0; i < 10000000; i++){
+    set<short> current_bet;
+    for(int j = 0; j < bet_size; j++){
+      short n;
+      // cin >> n;
+      scanf("%hd", &n);
+      current_bet.insert(n);
     }
+
+    all_bets.push_back(current_bet);
   }
 
-  cout << "Result: ";
-  auto start = high_resolution_clock::now(); 
-  set<short> result = solve(all_bets, n_options, bet_size);
   auto stop = high_resolution_clock::now(); 
+  auto duration = duration_cast<microseconds>(stop - start); 
+  cout << "Time taken to read: " << (duration.count() / 1000000.0) << endl; 
+
+  set<short> result = solve(all_bets, n_options, bet_size);
+
+  cout << "Result: ";
   for(auto it = result.begin(); it != result.end(); it++){
     cout << *it << " ";
   }
   cout << endl;
-
-  auto duration = duration_cast<microseconds>(stop - start); 
-  cout << "Time taken: " << duration.count() << endl; 
 
   return 0;
 }
