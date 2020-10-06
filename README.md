@@ -7,3 +7,5 @@ Some programming activities I recieve from friends, found on internet or somethi
 **debruijn.cpp**: A De Bruijn sequence generator in C++ (Duval's Algorithm).
 
 **pidigits.py**: A PI digit calculator using collisions between blocks (3blue1brown video https://youtu.be/HEfHFsfGXjs)
+
+**lottery.cpp**: A lottery bet finder in which from a list of all bets, you find a combination that wasn't in the list
