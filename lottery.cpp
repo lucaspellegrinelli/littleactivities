@@ -3,8 +3,14 @@
 #include <stdlib.h>
 #include <vector>
 #include <set>
+#include <chrono> 
+
+#include <bits/stdc++.h>
+#define magic ios_base::sync_with_stdio(false);
+#define thingy cin.tie(NULL); cout.tie(NULL);
 
 using namespace std;
+using namespace chrono; 
 
 // Calculates the amount of possible combinations
 // possible witn n and k (nCr).
@@ -148,11 +154,11 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   We have that
   60 * 6^2 + 10000000 * 6 + (60! / (6! * (60 - 6)!)) = 110066020
 
-  Assuming 10^8 operations takes approximatelly 1 second, this much
-  operations should take approx 110066020 / 10^8 = 1.1 seconds without
-  taking the reading of the file into account.
+  This took approx 160 seconds in my machine.
 */
 int main(int argc, char *argv[]){
+  magic thingy;
+
   int n_options = 60;
   int bet_size = 6;
 
@@ -173,11 +179,16 @@ int main(int argc, char *argv[]){
   }
 
   cout << "Result: ";
+  auto start = high_resolution_clock::now(); 
   set<short> result = solve(all_bets, n_options, bet_size);
+  auto stop = high_resolution_clock::now(); 
   for(auto it = result.begin(); it != result.end(); it++){
     cout << *it << " ";
   }
   cout << endl;
+
+  auto duration = duration_cast<microseconds>(stop - start); 
+  cout << "Time taken: " << duration.count() << endl; 
 
   return 0;
 }
