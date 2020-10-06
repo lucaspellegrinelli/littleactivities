@@ -68,7 +68,6 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   int bet_options_count = nCk_precomp[n_options][bet_size];
   vector<int> bet_options(bet_options_count, 0);
 
-  auto start = high_resolution_clock::now(); 
   for(set<short> bet : all_bets){
     int encoded_bet = 0;
     int k = bet.size();
@@ -78,15 +77,12 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
 
     bet_options[encoded_bet]++;
   }
-  auto stop = high_resolution_clock::now(); 
-  auto duration = duration_cast<microseconds>(stop - start); 
-  cout << "Time taken to encode: " << (duration.count() / 1000000.0) << endl; 
 
   for(int i = 0; i < bet_options_count; i++){
     if(bet_options[i] == 0){
       return decode_bet(i, bet_size, nCk_precomp);
     }
-  }
+  } 
 
   return decode_bet(0, bet_size, nCk_precomp);
 }
@@ -164,7 +160,6 @@ int main(int argc, char *argv[]){
     set<short> current_bet;
     for(int j = 0; j < bet_size; j++){
       short n;
-      // cin >> n;
       scanf("%hd", &n);
       current_bet.insert(n);
     }
@@ -176,7 +171,11 @@ int main(int argc, char *argv[]){
   auto duration = duration_cast<microseconds>(stop - start); 
   cout << "Time taken to read: " << (duration.count() / 1000000.0) << endl; 
 
+  start = high_resolution_clock::now(); 
   set<short> result = solve(all_bets, n_options, bet_size);
+  stop = high_resolution_clock::now(); 
+  duration = duration_cast<microseconds>(stop - start); 
+  cout << "Time taken to solve: " << (duration.count() / 1000000.0) << endl; 
 
   cout << "Result: ";
   for(auto it = result.begin(); it != result.end(); it++){
