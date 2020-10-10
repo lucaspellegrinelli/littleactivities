@@ -79,7 +79,7 @@ set<short> decode_bet(long long bet_id, int bet_size, vector<vector<long long>> 
 
 // Takes all the bets and returns a bet subcombination that
 // has n_betters_min <= #bets <= n_betters_max
-SearchResult solve(vector<set<short>> all_bets, int n_options, int bet_size, int target_bet_size, int n_betters_min, int n_betters_max){
+vector<SearchResult> solve(vector<set<short>> all_bets, int n_options, int bet_size, int target_bet_size, int n_betters_min, int n_betters_max){
   vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, target_bet_size);
 
   int bet_options_count = nCk_precomp[n_options][target_bet_size];
@@ -104,13 +104,15 @@ SearchResult solve(vector<set<short>> all_bets, int n_options, int bet_size, int
     }while(prev_permutation(sub_bet_marker.begin(), sub_bet_marker.end()));
   }
 
+  vector<SearchResult> all_solutions;
   for(int i = 0; i < bet_options_count; i++){
     if(bet_options[i] >= n_betters_min && bet_options[i] <= n_betters_max){
-      return SearchResult(decode_bet(i, target_bet_size, nCk_precomp), bet_options[i]);
+      set<short> solution = decode_bet(i, target_bet_size, nCk_precomp);
+      all_solutions.push_back(SearchResult(solution, bet_options[i]));
     }
   }
 
-  return SearchResult();
+  return all_solutions;
 }
 
 /*
@@ -137,13 +139,18 @@ SearchResult solve(vector<set<short>> all_bets, int n_options, int bet_size, int
 
   ---- OUTPUT -----
   A combination of numbers which has qtd of bets between the specified
-  range (#bets >= n_betters_min and #bets <= n_betters_max). If said
-  combination does not exist, -1 is returned.
+  range (#bets >= n_betters_min and #bets <= n_betters_max).
 
-  -----
-  It takes around 20 seconds to run with
-  ./lottery 10000000 60 6 4 2 8 < bet_list.txt
-*/
+  -----------------
+  It takes around ~15 seconds to run (if compiled with the -O3 tag)
+  ./lottery 10000000 60 6 4 2 500 < bet_list.txt
+
+  In other words, it takes the 10M bets of size 6 and finds all
+  combinations of 4 numbers which 2 <= x <= 500 betters betted on.
+
+  This software displays only the first solution, but to change that
+  just change the "main" method.
+ */
 int main(int argc, char *argv[]){
   int n_games = 100;
   int n_options = 60;
@@ -178,16 +185,20 @@ int main(int argc, char *argv[]){
   cout << "Time taken to read: " << (duration.count() / 1000000.0) << endl; 
 
   start = high_resolution_clock::now(); 
-  SearchResult result = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
+  vector<SearchResult> result = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
   stop = high_resolution_clock::now(); 
   duration = duration_cast<microseconds>(stop - start); 
   cout << "Time taken to solve: " << (duration.count() / 1000000.0) << endl; 
 
-  cout << "Result: ";
-  for(auto it = result.combination.begin(); it != result.combination.end(); it++){
-    cout << *it << " ";
+  if(result.size() > 0){
+    cout << "Result: ";
+    for(auto it = result[0].combination.begin(); it != result[0].combination.end(); it++){
+      cout << *it << " ";
+    }
+    cout << "with " << result[0].count << " appearances" << endl;
+  }else{
+    cout << "No solutions found" << endl;
   }
-  cout << "with " << result.count << " appearances" << endl;
 
   return 0;
 }
