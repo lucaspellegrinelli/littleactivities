@@ -9,6 +9,22 @@
 using namespace std;
 using namespace chrono; 
 
+class SearchResult{
+  public:
+  set<short> combination;
+  int count;
+
+  SearchResult(set<short> combination, int count){
+    this->combination = combination;
+    this->count = count;
+  }
+
+  SearchResult(){
+    this->combination.insert(-1);
+    this->count = -1;
+  }
+};
+
 // Calculates the amount of possible combinations
 // possible witn n and k (nCr).
 long long n_choose_k(long long n, long long k){
@@ -61,41 +77,55 @@ set<short> decode_bet(long long bet_id, int bet_size, vector<vector<long long>> 
   return result;
 }
 
-// Takes all the bets and returns a bet that no one betted on
-set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
-  vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, bet_size);
+// Takes all the bets and returns a bet subcombination that
+// has n_betters_min <= #bets <= n_betters_max
+SearchResult solve(vector<set<short>> all_bets, int n_options, int bet_size, int target_bet_size, int n_betters_min, int n_betters_max){
+  vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, target_bet_size);
 
-  int bet_options_count = nCk_precomp[n_options][bet_size];
+  int bet_options_count = nCk_precomp[n_options][target_bet_size];
   vector<int> bet_options(bet_options_count, 0);
 
   for(set<short> bet : all_bets){
-    int encoded_bet = 0;
-    int k = bet.size();
-    for(set<short>::reverse_iterator it = bet.rbegin(); it != bet.rend(); it++){
-      encoded_bet += nCk_precomp[*it][k--];
-    }
+    vector<bool> sub_bet_marker(bet_size);
+    fill(sub_bet_marker.begin(), sub_bet_marker.begin() + target_bet_size, true);
 
-    bet_options[encoded_bet]++;
+    do{
+      int k = target_bet_size;
+      int encoded_sub_bet = 0;
+
+      set<short>::reverse_iterator itr = bet.rbegin();
+      for(int i = 0; itr != bet.rend(); itr++, i++){
+        if(sub_bet_marker[i]){
+          encoded_sub_bet += nCk_precomp[*itr][k--];
+        }
+      }
+
+      bet_options[encoded_sub_bet]++;
+    }while(prev_permutation(sub_bet_marker.begin(), sub_bet_marker.end()));
   }
 
   for(int i = 0; i < bet_options_count; i++){
-    if(bet_options[i] == 0){
-      return decode_bet(i, bet_size, nCk_precomp);
+    if(bet_options[i] >= n_betters_min && bet_options[i] <= n_betters_max){
+      return SearchResult(decode_bet(i, target_bet_size, nCk_precomp), bet_options[i]);
     }
-  } 
+  }
 
-  return decode_bet(0, bet_size, nCk_precomp);
+  return SearchResult();
 }
 
 /*
   ---- INPUT -----
-  ./lottery [n_options=60] [bet_size=6] < [bet_list].txt
+  ./lottery [n_games=1000] [n_options=60] [bet_size=6]
+            [target_bet_size=6] [n_betters_min=0] [n_betters_max=0] < [bet_list].txt
 
-  Where "n_options" is the maximum number each player
-  has available to them when betting, "bet size" is how
-  many numbers they can choose and "bet_list" is the
-  filename of a file containing all the bets with each
-  number separated by spaces and bets separated by line.
+  Where
+    "n_games" = Number of games in the text file
+    "n_options" = Maximum number each player has available to them when betting
+    "bet size" = How many numbers they can choose in each bet
+    "target_bet_size" = The combination size to search for
+    "n_betters_min" = Minimum number of betters that betted the target combination to be found
+    "n_betters_max" = Maximum number of betters that betted the target combination to be found
+    "bet_list" = Text file with the bets.
 
   > bet_list_example.txt
   0 1 2 3 4 5
@@ -106,58 +136,33 @@ set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size){
   ...
 
   ---- OUTPUT -----
-  A combination of numbers which has no bets on. If said
-  combination does not exist, the lexographic first sequence
-  possible is returned.
+  A combination of numbers which has qtd of bets between the specified
+  range (#bets >= n_betters_min and #bets <= n_betters_max). If said
+  combination does not exist, -1 is returned.
 
-  ---- TIME COMPLEXITY ANALYSIS ----
-  The time complexity of this algorithm is
-  O(m * k^2 + n * k + (m! / (k! * (m - k)!)))
-
-  Where
-    'n' = Number of bets
-    'k' = Size of each bet
-    'm' = Options available to choose from in each bet
-  
-  O(m * k^2) comes from the matrix precomputing where we loop
-  through each possible bet number and for each of them (O(m)),
-  through each position in the bet it can be in (O(k)) and for
-  each of these combinations, we calculate nCr with it in O(k).
-  Nesting all this together we end up with O(m * k^2)
-
-  O(n * k) is because when calling 'solve', we loop through
-  each bet (O(n)), for each bet we need to encode it by looping
-  through each number in the bet (O(k)) and each encoding is
-  now O(1) with the pre computing of the nCr matrix.
-
-  O(m! / (k! * (m - k)!)) is because after encoding each bet,
-  we need to loop over all possible combinations of bets, which
-  is simply m-choose-k, with is calculated with this formula.
-
-  Since we execute all of these in sequence, we add them up.
-
-  For the base example, values used were
-    'n' = 10000000  (10 million bets)
-    'k' = 6         (numbers in each bet)
-    'm' = 60        (options available to choose from in each bet)
-  
-  We have that
-  60 * 6^2 + 10000000 * 6 + (60! / (6! * (60 - 6)!)) = 110066020
-
-  This took approx 3 seconds in my machine with the -O3 compilation
-  tag.
+  -----
+  It takes around 20 seconds to run with
+  ./lottery 10000000 60 6 4 2 8 < bet_list.txt
 */
 int main(int argc, char *argv[]){
+  int n_games = 100;
   int n_options = 60;
   int bet_size = 6;
+  int target_bet_size = 6;
+  int n_betters_min = 2;
+  int n_betters_max = 50;
 
-  if(argc > 1) n_options = strtol(argv[1], &argv[1], 10);
-  if(argc > 2) bet_size = strtol(argv[2], &argv[2], 10);
+  if(argc > 1) n_games = strtol(argv[1], &argv[1], 10);
+  if(argc > 2) n_options = strtol(argv[2], &argv[2], 10);
+  if(argc > 3) bet_size = strtol(argv[3], &argv[3], 10);
+  if(argc > 4) target_bet_size = strtol(argv[4], &argv[4], 10);
+  if(argc > 5) n_betters_min = strtol(argv[5], &argv[5], 10);
+  if(argc > 5) n_betters_max = strtol(argv[6], &argv[6], 10);
 
   auto start = high_resolution_clock::now(); 
 
   vector<set<short>> all_bets;
-  for(int i = 0; i < 10000000; i++){
+  for(int i = 0; i < n_games; i++){
     set<short> current_bet;
     for(int j = 0; j < bet_size; j++){
       short n;
@@ -173,16 +178,16 @@ int main(int argc, char *argv[]){
   cout << "Time taken to read: " << (duration.count() / 1000000.0) << endl; 
 
   start = high_resolution_clock::now(); 
-  set<short> result = solve(all_bets, n_options, bet_size);
+  SearchResult result = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
   stop = high_resolution_clock::now(); 
   duration = duration_cast<microseconds>(stop - start); 
   cout << "Time taken to solve: " << (duration.count() / 1000000.0) << endl; 
 
   cout << "Result: ";
-  for(auto it = result.begin(); it != result.end(); it++){
+  for(auto it = result.combination.begin(); it != result.combination.end(); it++){
     cout << *it << " ";
   }
-  cout << endl;
+  cout << "with " << result.count << " appearances" << endl;
 
   return 0;
 }
