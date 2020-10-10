@@ -11,17 +11,12 @@ using namespace chrono;
 
 class SearchResult{
   public:
-  set<short> combination;
-  int count;
+  long long encoded_bet;
+  long long count;
 
-  SearchResult(set<short> combination, int count){
-    this->combination = combination;
+  SearchResult(long long encoded_bet, long long count){
+    this->encoded_bet = encoded_bet;
     this->count = count;
-  }
-
-  SearchResult(){
-    this->combination.insert(-1);
-    this->count = -1;
   }
 };
 
@@ -107,8 +102,7 @@ vector<SearchResult> solve(vector<set<short>> all_bets, int n_options, int bet_s
   vector<SearchResult> all_solutions;
   for(int i = 0; i < bet_options_count; i++){
     if(bet_options[i] >= n_betters_min && bet_options[i] <= n_betters_max){
-      set<short> solution = decode_bet(i, target_bet_size, nCk_precomp);
-      all_solutions.push_back(SearchResult(solution, bet_options[i]));
+      all_solutions.push_back(SearchResult(i, bet_options[i]));
     }
   }
 
@@ -191,10 +185,11 @@ int main(int argc, char *argv[]){
   cout << "Time taken to solve: " << (duration.count() / 1000000.0) << endl; 
 
   if(result.size() > 0){
+    vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, target_bet_size);
+
     cout << "Result: ";
-    for(auto it = result[0].combination.begin(); it != result[0].combination.end(); it++){
-      cout << *it << " ";
-    }
+    set<short> solution = decode_bet(result[0].encoded_bet, target_bet_size, nCk_precomp);
+    for(auto it = solution.begin(); it != solution.end(); it++) cout << *it << " ";
     cout << "with " << result[0].count << " appearances" << endl;
   }else{
     cout << "No solutions found" << endl;
