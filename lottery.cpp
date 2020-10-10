@@ -9,17 +9,6 @@
 using namespace std;
 using namespace chrono; 
 
-class SearchResult{
-  public:
-  long long encoded_bet;
-  long long count;
-
-  SearchResult(long long encoded_bet, long long count){
-    this->encoded_bet = encoded_bet;
-    this->count = count;
-  }
-};
-
 // Calculates the amount of possible combinations
 // possible witn n and k (nCr).
 long long n_choose_k(long long n, long long k){
@@ -74,18 +63,25 @@ set<short> decode_bet(long long bet_id, int bet_size, vector<vector<long long>> 
 
 // Takes all the bets and returns a bet subcombination that
 // has n_betters_min <= #bets <= n_betters_max
-vector<SearchResult> solve(vector<set<short>> all_bets, int n_options, int bet_size, int target_bet_size, int n_betters_min, int n_betters_max){
-  vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, target_bet_size);
+set<short> solve(vector<set<short>> all_bets, int n_options, int bet_size, int target_bet_size, int n_betters_min, int n_betters_max){
+  vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, bet_size);
 
-  int bet_options_count = nCk_precomp[n_options][target_bet_size];
-  vector<int> bet_options(bet_options_count, 0);
+  int sub_bet_options_count = nCk_precomp[n_options][target_bet_size];
+  vector<int> sub_bet_options(sub_bet_options_count, 0);
+  vector<vector<int>> sub_bet_origin(sub_bet_options_count);
 
   for(set<short> bet : all_bets){
+    int encoded_bet = 0;
+    int k = bet_size;
+    for(auto it = bet.rbegin(); it != bet.rend(); it++){
+      encoded_bet += nCk_precomp[*it][k--];
+    }
+
     vector<bool> sub_bet_marker(bet_size);
     fill(sub_bet_marker.begin(), sub_bet_marker.begin() + target_bet_size, true);
 
     do{
-      int k = target_bet_size;
+      k = target_bet_size;
       int encoded_sub_bet = 0;
 
       set<short>::reverse_iterator itr = bet.rbegin();
@@ -95,18 +91,52 @@ vector<SearchResult> solve(vector<set<short>> all_bets, int n_options, int bet_s
         }
       }
 
-      bet_options[encoded_sub_bet]++;
+      sub_bet_options[encoded_sub_bet]++;
+      sub_bet_origin[encoded_sub_bet].push_back(encoded_bet);
     }while(prev_permutation(sub_bet_marker.begin(), sub_bet_marker.end()));
   }
 
-  vector<SearchResult> all_solutions;
-  for(int i = 0; i < bet_options_count; i++){
-    if(bet_options[i] >= n_betters_min && bet_options[i] <= n_betters_max){
-      all_solutions.push_back(SearchResult(i, bet_options[i]));
+  int enc_sub_solution = -1;
+  for(int i = 0; i < sub_bet_options_count; i++){
+    if(sub_bet_options[i] >= n_betters_min && sub_bet_options[i] <= n_betters_max){
+      enc_sub_solution = i;
+      break;
     }
   }
 
-  return all_solutions;
+  if(enc_sub_solution >= 0){
+    set<short> sub_solution = decode_bet(enc_sub_solution, target_bet_size, nCk_precomp);
+    set<int> taken_numbers;
+    for(int i = 0; i < sub_bet_origin[enc_sub_solution].size(); i++){
+      set<short> bet = decode_bet(sub_bet_origin[enc_sub_solution][i], bet_size, nCk_precomp);
+
+      for(auto it0 = bet.begin(); it0 != bet.end(); it0++){
+        bool found = false;
+        for(auto it1 = sub_solution.begin(); it1 != sub_solution.end(); it1++){
+          if((*it0) == (*it1)){
+            found = true;
+            break;
+          }
+        }
+
+        if(!found) taken_numbers.insert(*it0);
+      }
+    }
+
+    for(int i = 0; i < n_options; i++){
+      if(taken_numbers.find(i) == taken_numbers.end() && sub_solution.find(i) == sub_solution.end()){
+        sub_solution.insert(i);
+      }
+      
+      if(sub_solution.size() == bet_size){
+        return sub_solution;
+      }
+    }
+  }
+
+  set<short> d;
+  d.insert(-1);
+  return d;
 }
 
 /*
@@ -136,14 +166,12 @@ vector<SearchResult> solve(vector<set<short>> all_bets, int n_options, int bet_s
   range (#bets >= n_betters_min and #bets <= n_betters_max).
 
   -----------------
-  It takes around ~15 seconds to run (if compiled with the -O3 tag)
-  ./lottery 10000000 60 6 4 2 500 < bet_list.txt
+  It takes around ~30 seconds to run (if compiled with the -O3 tag)
+  ./lottery 10000000 60 6 5 2 2 < bet_list.txt
 
-  In other words, it takes the 10M bets of size 6 and finds all
-  combinations of 4 numbers which 2 <= x <= 500 betters betted on.
-
-  This software displays only the first solution, but to change that
-  just change the "main" method.
+  In other words, it takes the 10M bets of size 6 and finds a
+  "house bet" that would mean exactly 2 people would win with
+  5 equal numbers to the "house bet".
  */
 int main(int argc, char *argv[]){
   int n_games = 100;
@@ -179,23 +207,14 @@ int main(int argc, char *argv[]){
   cout << "Time taken to read: " << (duration.count() / 1000000.0) << endl; 
 
   start = high_resolution_clock::now(); 
-  vector<SearchResult> all_solutions = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
+  set<short> solution = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
   stop = high_resolution_clock::now(); 
   duration = duration_cast<microseconds>(stop - start); 
   cout << "Time taken to solve: " << (duration.count() / 1000000.0) << endl; 
 
-  if(all_solutions.size() > 0){
-    cout << "Number of solutions: " << all_solutions.size() << endl;
-
-    vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, target_bet_size);
-
-    cout << "First solution: ";
-    set<short> solution = decode_bet(all_solutions[0].encoded_bet, target_bet_size, nCk_precomp);
-    for(auto it = solution.begin(); it != solution.end(); it++) cout << *it << " ";
-    cout << "with " << all_solutions[0].count << " appearances" << endl;
-  }else{
-    cout << "No solutions found" << endl;
-  }
+  cout << "First solution: ";
+  for(auto it = solution.begin(); it != solution.end(); it++) cout << *it << " ";
+  cout << endl;
 
   return 0;
 }
