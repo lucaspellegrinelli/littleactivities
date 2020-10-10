@@ -179,18 +179,20 @@ int main(int argc, char *argv[]){
   cout << "Time taken to read: " << (duration.count() / 1000000.0) << endl; 
 
   start = high_resolution_clock::now(); 
-  vector<SearchResult> result = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
+  vector<SearchResult> all_solutions = solve(all_bets, n_options, bet_size, target_bet_size, n_betters_min, n_betters_max);
   stop = high_resolution_clock::now(); 
   duration = duration_cast<microseconds>(stop - start); 
   cout << "Time taken to solve: " << (duration.count() / 1000000.0) << endl; 
 
-  if(result.size() > 0){
+  if(all_solutions.size() > 0){
+    cout << "Number of solutions: " << all_solutions.size() << endl;
+
     vector<vector<long long>> nCk_precomp = precompute_nCk(n_options, target_bet_size);
 
-    cout << "Result: ";
-    set<short> solution = decode_bet(result[0].encoded_bet, target_bet_size, nCk_precomp);
+    cout << "First solution: ";
+    set<short> solution = decode_bet(all_solutions[0].encoded_bet, target_bet_size, nCk_precomp);
     for(auto it = solution.begin(); it != solution.end(); it++) cout << *it << " ";
-    cout << "with " << result[0].count << " appearances" << endl;
+    cout << "with " << all_solutions[0].count << " appearances" << endl;
   }else{
     cout << "No solutions found" << endl;
   }
